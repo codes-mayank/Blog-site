@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Clock, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const BlogCard = ({ post }) => {
     return (
@@ -15,9 +16,9 @@ const BlogCard = ({ post }) => {
                 </div>
                 <h3 className="card-title">{post.title}</h3>
                 <p className="card-excerpt">{post.excerpt}</p>
-                <a href={`/post/${post.id}`} className="card-link">
+                <Link to={`/post/${post.slug}`} className="card-link">
                     Read Article <ArrowRight size={16} />
-                </a>
+                </Link>
             </div>
         </article>
     );
