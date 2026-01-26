@@ -1,0 +1,37 @@
+.category-strip {
+  width: 100%;
+  padding: 1rem 0;
+  margin-top: 1rem;
+}
+
+.category-container {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem; /* For scrollbar space if needed */
+  scrollbar-width: none; /* Firefox */
+}
+
+.category-container::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.category-item {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.category-item:hover {
+  color: var(--text-primary);
+}
+
+.category-item.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
