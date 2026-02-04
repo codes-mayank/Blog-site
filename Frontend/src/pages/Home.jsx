@@ -1,77 +1,102 @@
-import React, { useEffect } from 'react';
+import React, { useState ,  useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import CategoryStrip from '../components/CategoryStrip';
 import FeaturedPost from '../components/FeaturedPost';
 import PostCard from '../components/PostCard';
-import './Home.css';
-
-
-
-const posts = [
-  {
-    id: 1,
-    title: 'Understanding Asynchronous JavaScript',
-    time: '13 min',
-    tag: 'JS',
-    authorImg: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  },
-  {
-    id: 2,
-    title: 'Mastering Tailwind CSS Grids',
-    time: '14 min',
-    tag: 'CSS',
-    authorImg: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  },
-  {
-    id: 3,
-    title: 'Find C++ and Anverocing to an e quitt-note',
-    time: '14 min',
-    tag: 'CSS',
-    authorImg: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  },
-  {
-    id: 4,
-    title: 'How to Endure Your ethnu Guide',
-    time: '12 min',
-    tag: 'JS',
-    authorImg: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  },
-  {
-    id: 5,
-    title: 'Mastering Tailwind CSS Grids',
-    time: '14 min',
-    tag: 'CSS',
-    authorImg: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  },
-  {
-    id: 6,
-    title: 'User Frenzide Design in Modern Apps',
-    time: '14 min',
-    tag: 'JS',
-    authorImg: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  }
-];
 
 const Home = () => {
+  const [post, setPost] = useState([]);
+  const [page, setPage] = useState(1);
+  const [category, setCategory] = useState('All');
+  const [hasMore, setHasMore] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const LIMIT = 6;
+
+  const searchTerm = searchParams.get('search');
+
+  // Reset category if searching, or handle interaction. 
+  // For now, if search term exists, we might want to ignore category or filter within category. 
+  // Let's assume search overrides category for simplicity, or we filter within category if user selected one.
+  // The user requirement is 'search using the title', usually global search.
+  
   useEffect(() => {
-    fetch('http://localhost:8000/posts/')
+    // If there's a search term, we might want to reset category visual or keep it 'All'
+    // But let's build the URL dynamically
+    const offset = (page - 1) * LIMIT;
+    let url = `http://localhost:8000/posts/?limit=${LIMIT}&offset=${offset}`;
+    
+    if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+    } else if (category !== 'All') {
+        url += `&tag=${category}`;
+    }
+    
+    fetch(url)
       .then(res => res.json())
-      .then(data => console.log(data))
+      .then(data => {
+        setPost(data);
+        if (data.length < LIMIT) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+        }
+      })
       .catch(error => console.error("Fetch error:", error));
-  }, [])
+  }, [page, category, searchTerm]);
+  
+  // When search changes, reset page (handled by effect dependency on page? No, need to reset page explicitly if search changes)
+  useEffect(() => {
+     setPage(1);
+     if (searchTerm) {
+         setCategory('All'); // Clear category selection on search
+     }
+  }, [searchTerm]);
+
+  const handleCategoryChange = (newCategory) => {
+    if (newCategory === category) return;
+    setCategory(newCategory);
+    setPage(1);
+  };
+
+  const handlePrevious = () => {
+    setPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNext = () => {
+    setPage(prev => prev + 1);
+  };
 
   return (
-    <div className="home-container">
-      <CategoryStrip />
+    <div className="max-w-[1400px] mx-auto pt-32 px-6 pb-8 min-h-screen">
+      <CategoryStrip activeCategory={category} onCategoryChange={handleCategoryChange} />
       
-      <div className="content-wrapper">
+      <div className="mt-8">
         <FeaturedPost />
         
-        <div className="posts-grid">
-           {posts.map(post => (
-             <div key={post.id} className={''}>
-                 <PostCard {...post} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+           {post.map(p => (
+             <div key={p.id}>
+                 <PostCard {...p} />
              </div>
            ))}
+        </div>
+
+        <div className="flex justify-center items-center gap-6 mt-8 pb-8">
+          <button 
+            onClick={handlePrevious} 
+            disabled={page === 1}
+            className="px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
+          >
+            Previous
+          </button>
+          <span className="text-[0.95rem] text-text-secondary font-medium min-w-[80px] text-center">Page {page}</span>
+          <button 
+            onClick={handleNext}
+            disabled={!hasMore || post.length === 0}
+            className="px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

@@ -1,0 +1,229 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+
+const BlogPost = () => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const { user } = useUser();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/posts/${slug}`);
+        if (!response.ok) {
+           if (response.status === 404) {
+             throw new Error('Blog post not found');
+           }
+           throw new Error('Failed to fetch blog post');
+        }
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        setPost(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchPost();
+    }
+  }, [slug]);
+
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        const response = await fetch(`http://localhost:8000/posts/${post.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (response.ok) {
+           navigate('/');
+        } else {
+           alert('Failed to delete post');
+        }
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('Error deleting post');
+      }
+    }
+  };
+
+  const handleEdit = () => {
+     navigate(`/edit/${post.slug}`, { state: { post } });
+  };
+
+  const calculateReadTime = (text) => {
+    const wpm = 200;
+    const words = text ? text.trim().split(/\s+/).length : 0;
+    const time = Math.ceil(words / wpm);
+    return `${time} min read`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-bg-primary">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-border-color border-t-accent-primary rounded-full animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-accent-primary font-bold text-xs">
+            L
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-primary px-4">
+        <div className="text-center max-w-lg w-full bg-white p-10 rounded-2xl shadow-xl border border-border-color">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Unavailable</h2>
+          <p className="text-text-secondary mb-8">{error}</p>
+          <Link to="/" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-accent-primary hover:bg-accent-hover transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) return null;
+
+  return (
+    <div className="min-h-screen bg-bg-primary pb-20">
+        {/* Progress Bar (Simulated) */}
+        <div className="fixed top-0 left-0 w-full h-1 z-50 bg-transparent">
+             <div className="h-full bg-accent-primary w-full origin-left transform scale-x-0 animate-progress"></div>
+        </div>
+
+      <article className="max-w-4xl mx-auto pt-32 px-6">
+        {/* Header Section */}
+        <header className="text-center mb-12 animate-fade-in-up">
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+               {post.tag && (
+                 <span className="bg-accent-primary/10 text-accent-primary px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider border border-accent-primary/20">
+                   {post.tag}
+                 </span>
+               )}
+               <span className="flex items-center text-text-secondary text-sm font-medium bg-white px-3 py-1.5 rounded-full border border-border-color shadow-sm">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                 </svg>
+                 {calculateReadTime(post.body)}
+               </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary leading-[1.1] mb-8 tracking-tight">
+              {post.title}
+            </h1>
+
+            <div className="flex items-center justify-center">
+              <div className="flex items-center bg-white p-2 pr-6 rounded-full shadow-sm border border-border-color transition-transform hover:scale-105 cursor-pointer group">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-secondary to-accent-primary text-white flex items-center justify-center text-xl font-bold shadow-md mr-4 group-hover:rotate-12 transition-transform">
+                    {post.author_fullname ? post.author_fullname.charAt(0) : 'A'}
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-text-primary text-lg leading-tight">
+                      {post.author_fullname || post.author_username}
+                    </div>
+                    <div className="text-xs text-text-secondary font-medium flex items-center gap-2">
+                      <span>@{post.author_username}</span>
+                      <span className="w-1 h-1 rounded-full bg-text-secondary/50"></span>
+                      <span>{new Date(post.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                  </div>
+              </div>
+            </div>
+        </header>
+
+        {/* Content Section */}
+        <div className="bg-white rounded-3xl shadow-sm border border-border-color p-8 md:p-12 lg:p-16 mb-12">
+            <div className={`prose prose-lg max-w-none text-text-primary leading-loose whitespace-pre-wrap font-serif md:font-sans lg:text-xl text-opacity-90`}>
+              {post.body}
+            </div>
+            
+            <div className="mt-12 pt-8 border-t border-border-color flex items-center justify-between">
+                <div className="flex gap-4">
+                    {/* Share Buttons (Visual Only) */}
+                    <button className="w-10 h-10 rounded-full bg-bg-primary flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                    </button>
+                    <button className="w-10 h-10 rounded-full bg-bg-primary flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  {user && user.id === post.author_id && (
+                    <div className="flex items-center gap-3 mr-4">
+                      <button 
+                        onClick={handleEdit}
+                        className="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button 
+                        onClick={handleDelete}
+                        className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
+                      >
+                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                  <div className="text-text-secondary text-sm italic">
+                      Thanks for reading
+                  </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Footer / Author Bio */}
+        <div className="bg-gradient-to-br from-[#f8f9fa] to-[#eef2ff] rounded-2xl p-8 border border-border-color/50 mb-12 flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+            <div className="w-20 h-20 rounded-full bg-white p-1 shadow-md flex-shrink-0">
+                <div className="w-full h-full rounded-full bg-accent-secondary flex items-center justify-center text-white text-3xl font-bold">
+                    {post.author_fullname ? post.author_fullname.charAt(0) : 'A'}
+                </div>
+            </div>
+            <div>
+                <h3 className="text-lg font-bold text-text-primary mb-2">Written by {post.author_fullname || post.author_username}</h3>
+                <p className="text-text-secondary mb-4 max-w-xl">
+                    Passionate writer and contributor. Sharing insights on {post.tag || 'various topics'}. 
+                    Follow for more updates and stories regarding technology and life.
+                </p>
+                <div className="flex justify-center md:justify-start gap-3">
+                   <button className="px-4 py-2 bg-text-primary text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">Follow</button>
+                   <Link to="/" className="px-4 py-2 bg-white border border-border-color text-text-secondary text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">View all posts</Link>
+                </div>
+            </div>
+        </div>
+
+      </article>
+    </div>
+  );
+};
+
+export default BlogPost;
