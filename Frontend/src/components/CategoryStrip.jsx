@@ -8,7 +8,7 @@ const categories = [
   'Dreaming',
   'Guide',
   'Design',
-  'More'
+  'Other'
 ];
 
 const CategoryStrip = ({ activeCategory, onCategoryChange }) => {

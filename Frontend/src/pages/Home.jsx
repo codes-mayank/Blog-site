@@ -73,7 +73,7 @@ const Home = () => {
       <div className="mt-8">
         <FeaturedPost />
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
            {post.map(p => (
              <div key={p.id}>
                  <PostCard {...p} />
