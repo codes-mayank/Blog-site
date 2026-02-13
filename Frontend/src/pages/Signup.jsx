@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import GoogleSignIn from '../components/GoogleSignIn'; //Added
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const Signup = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    setError(''); //Added
   };
 
   const handleSubmit = async (e) => {
@@ -51,6 +53,10 @@ const Signup = () => {
     }
   };
 
+  const handleGoogleError = (errorMessage) => {     //Added
+    setError(errorMessage);
+  };
+
   return (
     <div className="min-h-screen pt-24 px-6 flex items-center justify-center">
       <div className="w-full max-w-md bg-bg-secondary p-8 rounded-2xl shadow-sm border border-border-color">
@@ -62,6 +68,21 @@ const Signup = () => {
             {error}
           </div>
         )}
+
+        {/* Google Sign-In Button */}
+        <div className="mb-6">
+          <GoogleSignIn 
+            buttonText="signup_with" 
+            onError={handleGoogleError} 
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="relative flex items-center my-6">
+          <div className="flex-grow border-t border-border-color"></div>
+          <span className="flex-shrink mx-4 text-text-secondary text-sm">OR</span>
+          <div className="flex-grow border-t border-border-color"></div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>

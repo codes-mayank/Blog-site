@@ -152,9 +152,10 @@ const BlogPost = () => {
 
         {/* Content Section */}
         <div className="bg-white rounded-3xl shadow-sm border border-border-color p-8 md:p-12 lg:p-16 mb-12">
-            <div className={`prose prose-lg max-w-none text-text-primary leading-loose whitespace-pre-wrap font-serif md:font-sans lg:text-xl text-opacity-90`}>
+            {/* <div className={`prose prose-lg max-w-none text-text-primary leading-loose whitespace-pre-wrap font-serif md:font-sans lg:text-xl text-opacity-90`}>
               {post.body}
-            </div>
+            </div> */}
+            <div dangerouslySetInnerHTML={{__html: post.body}}/>
             
             <div className="mt-12 pt-8 border-t border-border-color flex items-center justify-between">
                 <div className="flex gap-4">

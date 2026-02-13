@@ -7,6 +7,7 @@ class BlogBase(BaseModel):
     title: str
     tag: str
     body: str
+    featured_photo: str
 
     class Config:
         orm_mode = True
@@ -25,7 +26,7 @@ class BlogOut(BlogBase):
     slug: str
     author_id: int
     created_at: datetime
-    likes_count: int
+    # likes_count: int
 
 
 class BlogOutWithAuthor(BlogBase):
@@ -36,6 +37,7 @@ class BlogOutWithAuthor(BlogBase):
     created_at: datetime
     author_fullname: str
     author_username: str
+    is_liked: bool = False
     # likes_count: int
 
 
@@ -71,3 +73,11 @@ class UserLogin(BaseModel):
     username_or_email: str
     password: str
 
+class LikeResponse(BaseModel):
+    message: str
+    blog_id: int
+    likes_count: int
+    is_liked_by_me: bool
+
+    class Config:
+        from_attributes = True

@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import RichTextEditor from '../components/RichTextEditor';
 
 const WriteBlog = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
   const location = useLocation();
   const { user, loading: authLoading } = useUser();
+  const imageRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '',
     tag: '',
+    featured_photo: '',
     body: ''
   });
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,21 @@ const WriteBlog = () => {
       navigate('/login');
     }
   }, [user, authLoading, navigate]);
+
+  // useEffect(()=>{
+  //   if(image === "") return;
+  //   const reader = new FileReader();
+  //   reader.readAsDataURL(image);
+  //   reader.onload = () =>{
+  //     setFormData({
+  //     ...formData,
+  //     featured_photo: reader.result
+  //   });
+  //   };
+  //   reader.onerror = (error) =>{
+  //     console.error("Error: ", error);
+  //   }
+  // }, [image])
 
   useEffect(() => {
     if (isEditMode) {
@@ -76,8 +94,59 @@ const WriteBlog = () => {
     });
   };
 
+  const handleBlogBodyChange = (value) => {
+    setFormData({
+      ...formData,
+      body: value
+    });
+  };
+
+  // const handleImageChange = (e) =>{
+  //   const file = e.target.files[0];
+  //   const reader = new FileReader();
+  //   console.log(file);
+  //   console.log(reader);
+  //   reader.readAsDataURL(file);
+  //   reader.onload = () =>{
+  //     setFormData({
+  //     ...formData,
+  //     featured_photo: reader.result
+  //   });
+  //   };
+  //   reader.onerror = (error) =>{
+  //     console.error("Error: ", error);
+  //   }
+  // }
+
+  // const convertIntoBase64 = (file) =>{
+  //   const reader = new FileReader();
+  //   reader.readAsDataURL(file);
+  //   reader.onload = () =>{
+  //     return reader.result;
+  //   };
+  //   reader.onerror = (error) =>{
+  //     console.error("Error: ", error);
+  //     return null;
+  //   }
+  // }
+
+  const convertIntoBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+      reader.onerror = (error) => {
+        console.error("Error: ", error);
+        reject(error);
+      };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    formData.featured_photo = await convertIntoBase64(imageRef.current.files[0]);
     setLoading(true);
     setError(null);
 
@@ -119,7 +188,7 @@ const WriteBlog = () => {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto pt-36 px-6 pb-8 min-h-screen">
+    <div className="max-w-[1400px] mx-auto pt-36 px-6 pb-8 min-h-screen">
       <div className="bg-bg-secondary rounded-2xl shadow-sm p-8 border border-border-color">
         <h1 className="text-3xl font-bold text-text-primary mb-8 tracking-tight">
           {isEditMode ? 'Edit Story' : 'Write a New Story'}
@@ -162,19 +231,25 @@ const WriteBlog = () => {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="body" className="block text-sm font-medium text-text-secondary mb-2">Content</label>
-            <textarea
-              id="body"
-              name="body"
-              required
-              rows="12"
-              value={formData.body}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-bg-primary border border-transparent focus:bg-white focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/10 outline-none transition-all text-text-primary placeholder:text-text-secondary/50 resize-y"
-              placeholder="Tell your story..."
-            ></textarea>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="featured_photo" className="block text-sm font-medium text-text-secondary mb-2">Featured Photo</label>
+              <input
+                type="file"
+                id="featured_photo"
+                name="featured_photo"
+                required
+                ref={imageRef}
+                // onChange={(e)=>{
+                //   setImage(e.target.files[0]);
+                // }}
+                className="w-full px-4 py-3 rounded-lg bg-bg-primary border border-transparent focus:bg-white focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/10 outline-none transition-all text-text-primary placeholder:text-text-secondary/50"
+                // placeholder="Upload your featured photo"
+              />
+            </div>
           </div>
+
+          <RichTextEditor value={formData.body} onChange={handleBlogBodyChange} />
 
           <div className="flex justify-end pt-4">
             <button

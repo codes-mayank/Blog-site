@@ -1,8 +1,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const PostCard = ({ slug, title, created_at, tag, author_fullname, author_username, body, image }) => {
-  
+const PostCard = ({ slug, title, created_at, tag, author_fullname, author_username, body, featured_photo, id, is_liked }) => {
+  console.log(is_liked)
+  console.log(author_fullname)
+  const [isLiked, setIsLiked] = useState(is_liked);
+
+  //Like Button Clicked
+  const onLike = () =>{
+    setIsLiked(!isLiked)
+    fetch(`http://localhost:8000/likes/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+  }
+
   // Calculate relative time
   const getTimeAgo = (dateString) => {
     if (!dateString) return '';
@@ -28,7 +43,9 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
   const getExcerpt = (text) => {
       if (!text) return "No description available.";
       // Simple strip of markdown chars like #, *, etc for cleaner view
-      const cleanText = text.replace(/[#*`_]/g, '');
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = text;
+      const cleanText = tempDiv.textContent || tempDiv.innerText || "";
       return cleanText.length > 100 ? cleanText.substring(0, 100) + "..." : cleanText;
   };
 
@@ -36,10 +53,11 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
 
   // Use a placeholder image if none provided.
   // Using a consistent nature-themed image as visually similar to the prompt example
-  const displayImage = image || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+  const displayImage = featured_photo || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
 
   return (
-    <Link to={`/posts/${slug}`} className="block bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group h-full flex flex-col">
+    <><div className="">
+      <Link to={`/posts/${slug}`} className="block bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group h-full flex flex-col">
       {/* Title */}
       <h3 className="text-xl leading-snug text-text-primary font-serif font-bold mb-4 group-hover:text-accent-primary transition-colors line-clamp-2">
         {title}
@@ -91,14 +109,19 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
             <div className="px-3 py-1 rounded-md border border-accent-secondary/30 text-accent-primary font-bold text-xs bg-accent-secondary/5">
                 {tag}
             </div>
-            <div className="text-red-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-red-400" >
+                <svg onClick={(e)=>{e.preventDefault(); e.stopPropagation(); onLike();}} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer transition-colors hover:scale-110" fill={(isLiked)?'currentColor':'none'} viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-            </div>
+     </div>
+           
          </div>
       </div>
+      
     </Link>
+     
+     </div>
+    </>
   );
 };
 

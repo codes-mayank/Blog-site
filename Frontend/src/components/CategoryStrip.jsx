@@ -19,7 +19,7 @@ const CategoryStrip = ({ activeCategory, onCategoryChange }) => {
         {categories.map((category) => (
           <button
             key={category}
-            className={`text-text-secondary font-medium text-[0.95rem] pb-2 border-b-2 transition-all duration-150 whitespace-nowrap hover:text-text-primary ${
+            className={`cursor-pointer text-text-secondary font-medium text-[0.95rem] pb-2 border-b-2 transition-all duration-150 whitespace-nowrap hover:text-text-primary ${
               activeCategory === category 
                 ? 'text-accent-primary border-accent-primary' 
                 : 'border-transparent'

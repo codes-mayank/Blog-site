@@ -14,7 +14,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[1400px] z-50">
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[1600px] z-50">
       <div className="bg-bg-secondary/80 backdrop-blur-md border border-white/20 shadow-lg rounded-2xl px-6 py-3 flex items-center justify-between gap-6 hover:shadow-xl transition-all duration-300">
         <Link to="/" className="text-2xl font-extrabold text-text-primary tracking-tighter flex items-baseline no-underline shrink-0">
           DevBlog<span className="text-accent-primary text-4xl leading-none ml-[2px]">.</span>

@@ -67,7 +67,7 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto pt-32 px-6 pb-8 min-h-screen">
+    <div className="max-w-[1600px] mx-auto pt-32 px-6 pb-8 min-h-screen">
       <CategoryStrip activeCategory={category} onCategoryChange={handleCategoryChange} />
       
       <div className="mt-8">
@@ -85,7 +85,7 @@ const Home = () => {
           <button 
             onClick={handlePrevious} 
             disabled={page === 1}
-            className="px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
+            className="cursor-pointer px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
           >
             Previous
           </button>
@@ -93,7 +93,7 @@ const Home = () => {
           <button 
             onClick={handleNext}
             disabled={!hasMore || post.length === 0}
-            className="px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
+            className="cursor-pointer px-6 py-3 bg-bg-secondary border border-border-color rounded-lg text-text-primary font-medium transition-all duration-150 shadow-sm hover:not-disabled:border-accent-primary hover:not-disabled:text-accent-primary hover:not-disabled:-translate-y-px active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-primary"
           >
             Next
           </button>

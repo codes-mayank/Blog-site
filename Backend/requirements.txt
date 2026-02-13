@@ -6,3 +6,7 @@ pymysql
 pydantic-settings
 passlib
 python-jose
+python-jose[cryptography]
+google-auth
+google-auth-oauthlib
+python-multipart

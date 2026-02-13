@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.core.security import get_password_hash, create_access_token, verify_password, create_token_payload, get_current_user
 from app.database import get_db
@@ -6,9 +7,147 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from app.schemas import UserIn, UserLogin, UserOut, Token
 from app.models import User
+from jose import jwt, JWTError
+from datetime import datetime, timedelta
+from typing import Optional
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import os
+from pydantic import BaseModel
 
 
 router = APIRouter()
+
+# Google OAuth
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+class GoogleLoginRequest(BaseModel):
+    token: str
+
+@router.post("/google/login")
+async def google_login(request: GoogleLoginRequest, response: Response, db: Session = Depends(get_db)):
+    """Login or register user with Google OAuth"""
+    
+    try:
+        # Verify the Google tokenresponse: Response
+        idinfo = id_token.verify_oauth2_token(
+            request.token, 
+            requests.Request(), 
+            GOOGLE_CLIENT_ID
+        )
+        
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+        
+        email = idinfo['email']
+        google_id = idinfo['sub']
+        full_name = idinfo.get('name', '')
+        # picture = idinfo.get('picture', '')
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid Google token: {str(e)}"
+        )
+    
+    # Check if user exists by email or google_id
+    user = db.query(User).filter(
+        or_(User.email == email, User.google_id == google_id)
+    ).first()
+    
+    if user:
+        # User exists - link Google account if not already linked
+        if not user.google_id:
+            user.google_id = google_id
+        # if not user.profile_picture:
+            # user.profile_picture = profile_picture  # Update picture from Google
+        db.commit()
+        db.refresh(user)
+    else:
+        # Create new user with Google account
+        # Generate unique username from email
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        
+        # Ensure username is unique
+        while db.query(User).filter(User.username == username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = User(
+            email=email,
+            username=username,
+            full_name=full_name,
+            google_id=google_id,
+            # profile_picture=profile_picture,
+            hashed_password=None  # No password for Google-only users
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Check if user is disabled
+    if user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled"
+        )
+    
+    # Generate JWT token using your existing function
+    access_token = create_access_token(data=create_token_payload(user).model_dump())
+    
+    # Set cookie (same as your other endpoints)
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME, 
+        value=access_token,
+        httponly=True
+    )
+    
+    return user  # Return user object, matches your UserOut schema
+
+
+
+    # Check if user exists by email
+    # user = db.query(User).filter(
+    #     or_(User.email == email, User.google_id == google_id)
+    # ).first()
+    
+    # if user:
+    #     # User exists - link Google account if not already linked
+    #     if not user.google_id:
+    #         user.google_id = google_id
+    #         user.picture = picture  # Update picture from Google
+    #         db.commit()
+    # else:
+    #     # Create new user with Google account
+    #     user = User(
+    #         email=email,
+    #         username=email.split('@')[0],  # Generate username from email
+    #         name=name,
+    #         google_id=google_id,
+    #         picture=picture,
+    #         is_verified=True  # Google emails are already verified
+    #     )
+    #     db.add(user)
+    #     db.commit()
+    #     db.refresh(user)
+    
+    # # Generate your existing JWT token
+    # access_token = create_access_token(data={"sub": user.email, "user_id": user.id})
+    
+    # return {
+    #     "access_token": access_token,
+    #     "token_type": "bearer",
+    #     "user": {
+    #         "id": user.id,
+    #         "email": user.email,
+    #         "username": user.username,
+    #         "name": user.name,
+    #         "picture": user.picture
+    #     }
+    # }
+
 
 
 @router.post("/signup", response_model=UserOut)
@@ -27,6 +166,61 @@ async def signup(response: Response, user: UserIn, db: Session = Depends(get_db)
         full_name=user.full_name,
         hashed_password=hashed_password
     )
+    # Check if user exists by email or google_id
+    user = db.query(User).filter(
+        or_(User.email == email, User.google_id == google_id)
+    ).first()
+    
+    if user:
+        # User exists - link Google account if not already linked
+        if not user.google_id:
+            user.google_id = google_id
+        # if not user.profile_picture:
+        #     user.profile_picture = profile_picture  # Update picture from Google
+        db.commit()
+        db.refresh(user)
+    else:
+        # Create new user with Google account
+        # Generate unique username from email
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        
+        # Ensure username is unique
+        while db.query(User).filter(User.username == username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = User(
+            email=email,
+            username=username,
+            full_name=full_name,
+            google_id=google_id,
+            # profile_picture=profile_picture,
+            hashed_password=None  # No password for Google-only users
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Check if user is disabled
+    if user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled"
+        )
+    
+    # Generate JWT token using your existing function
+    access_token = create_access_token(data=create_token_payload(user).model_dump())
+    
+    # Set cookie (same as your other endpoints)
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME, 
+        value=access_token,
+        httponly=True
+    )
+    
+    return user  # Return user object, matches your UserOut schema
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

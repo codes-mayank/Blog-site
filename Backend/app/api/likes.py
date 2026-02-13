@@ -1,53 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Blog
-from app.schemas import  Token
+from app.models import Blog, Like
+from app.schemas import  Token, LikeResponse
 from app.core.security import get_current_user
 
 router = APIRouter()
 
-@router.put('/{id}/like')
+@router.post('/{id}')
 def like(id: int, db: Session = Depends(get_db), token: Token = Depends(get_current_user)):
     """Like a blog post"""
-    blog = db.query(Blog).filter(Blog.id == blog_id).first()
+    blog = db.query(Blog).filter(Blog.id == id).first()
     if not blog:
-        raise HTTPException(status_code=404, detail="Blog not found")
-
-    # 2. Check if user already liked
-    like = db.query(Like).filter(
-        Like.blog_id == blog_id,
-        Like.user_id == current_user.id
-    ).first()
-
-    if like:
-        # Toggle like
-        like.is_active = not like.is_active
-        message = "Liked" if like.is_active else "Unliked"
-    else:
-        # First time like
-        like = Like(
-            blog_id=blog_id,
-            user_id=current_user.id,
-            is_active=True
-        )
-        db.add(like)
-        message = "Liked"
-
+        raise HTTPException(status_code=404, detail="Blog post not found")
+    
+    existing_like = db.query(Like).filter(Like.blog_id == id, Like.user_id == token.user_id).first()
+    if existing_like:
+        existing_like.is_active = not existing_like.is_active
+        db.commit()
+        db.refresh(existing_like)
+        return {'message': 'liked' if existing_like.is_active else 'unliked', 'blog_id': id, 'likes_count': blog.likes_count}
+    
+    new_like = Like(
+        blog_id=id,
+        user_id=token.user_id
+    )
+    db.add(new_like)
     db.commit()
-
-    # 3. Updated likes count
-    likes_count = db.query(Like).filter(
-        Like.blog_id == blog_id,
-        Like.is_active == True
-    ).count()
-
-    return {
-        "message": message,
-        "blog_id": blog_id,
-        "likes_count": likes_count,
-        "is_liked_by_me": like.is_active
-    }
+    db.refresh(new_like)
+    
+    return {'message': 'liked', 'blog_id': id}
 
 # @router.put('/{id}/unlike')
 # def unlike(id: int, db: Session = Depends(get_db), token: Token = Depends(get_current_user):
