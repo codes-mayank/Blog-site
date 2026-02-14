@@ -152,11 +152,23 @@ def read_all_blogs(
 
     
     
-    # If user is logged in, check likes for all blogs
-    if current_user:
-        blog_ids = [b.id for b in blogs]
+    # Prepare blog ids list (may be empty)
+    blog_ids = [b.id for b in blogs]
+
+    # Compute likes_count for each blog (only active likes)
+    likes_count_map = {}
+    if blog_ids:
+        likes_data = (
+            db.query(Like.blog_id, func.count(Like.id))
+            .filter(Like.blog_id.in_(blog_ids), Like.is_active == True)
+            .group_by(Like.blog_id)
+            .all()
+        )
+        likes_count_map = {row[0]: row[1] for row in likes_data}
+
+    # If user is logged in, check which blogs are liked by this user
+    if current_user and blog_ids:
         user_id = current_user.user_id  # Extract user_id from Token model
-        
         liked_blog_ids = set(
             row[0] for row in db.query(Like.blog_id)
             .filter(
@@ -168,7 +180,7 @@ def read_all_blogs(
         )
     else:
         liked_blog_ids = set()
-    
+
     return [
         {
             "id": b.id,
@@ -182,6 +194,7 @@ def read_all_blogs(
             "author_fullname": b.author_fullname,
             "author_username": b.author_username,
             "is_liked": b.id in liked_blog_ids,
+            "likes_count": int(likes_count_map.get(b.id, 0)),
         }
         for b in blogs
     ]
@@ -355,87 +368,66 @@ def update_blog(blog: BlogUpdate, id: int, db: Session = Depends(get_db), token:
 
 
 
-# @router.get('/featured')
-# def get_featured_blogs(
-#     limit: int = 3,  # Get top 3 most liked
-#     db: Session = Depends(get_db),
-#     current_user: Optional[Token] = Depends(get_current_user_optional)
-# ):
-#     """Get the most liked blog posts (featured posts)"""
-#     LikeAlias = aliased(Like)
-#     user_id = current_user.user_id if current_user else None
+@router.get('/featured', response_model=List[BlogOutWithAuthor])
+def get_featured_blogs(
+    limit: int = 3,  # Get top 3 most liked
+    db: Session = Depends(get_db),
+    current_user: Optional[Token] = Depends(get_current_user_optional)
+):
+    """Get the most liked blog posts (featured posts)"""
+    # Always return is_liked as False for featured list (not user-specific)
+    is_liked_expr = literal(False).label("is_liked")
 
-#     # CASE expression for is_liked
-#     if user_id:
-#         is_liked_expr = case(
-#             (
-#                 and_(
-#                     LikeAlias.id.isnot(None),
-#                     LikeAlias.is_active == True
-#                 ),
-#                 True
-#             ),
-#             else_=False
-#         ).label("is_liked")
-#     else:
-#         is_liked_expr = literal(False).label("is_liked")
+    # Subquery to count active likes per blog
+    like_count_subquery = (
+        db.query(
+            Like.blog_id,
+            func.count(Like.id).label('likes_count')
+        )
+        .filter(Like.is_active == True)
+        .group_by(Like.blog_id)
+        .subquery()
+    )
 
-#     # Subquery to count active likes per blog
-#     like_count_subquery = (
-#         db.query(
-#             Like.blog_id,
-#             func.count(Like.id).label('like_count')
-#         )
-#         .filter(Like.is_active == True)
-#         .group_by(Like.blog_id)
-#         .subquery()
-#     )
+    # Main query
+    featured_blogs = (
+        db.query(
+            Blog.id,
+            Blog.slug,
+            Blog.title,
+            Blog.tag,
+            Blog.body,
+            Blog.created_at,
+            Blog.featured_photo,
+            Blog.author_id,
+            User.full_name.label("author_fullname"),
+            User.username.label("author_username"),
+            func.coalesce(like_count_subquery.c.likes_count, 0).label("likes_count"),
+            is_liked_expr
+        )
+        .join(User, Blog.author_id == User.id)
+        .outerjoin(like_count_subquery, Blog.id == like_count_subquery.c.blog_id)
+        
+        .filter(Blog.is_deleted.is_(False))
+        .order_by(func.coalesce(like_count_subquery.c.likes_count, 0).desc())
+        .limit(limit)
+        .all()
+    )
 
-#     # Main query
-#     featured_blogs = (
-#         db.query(
-#             Blog.id,
-#             Blog.slug,
-#             Blog.title,
-#             Blog.tag,
-#             Blog.body,
-#             Blog.created_at,
-#             Blog.featured_photo,
-#             Blog.author_id,
-#             User.full_name.label("author_fullname"),
-#             User.username.label("author_username"),
-#             func.coalesce(like_count_subquery.c.like_count, 0).label("like_count"),
-#             is_liked_expr
-#         )
-#         .join(User, Blog.author_id == User.id)
-#         .outerjoin(like_count_subquery, Blog.id == like_count_subquery.c.blog_id)
-#         .outerjoin(
-#             LikeAlias,
-#             and_(
-#                 LikeAlias.blog_id == Blog.id,
-#                 LikeAlias.user_id == user_id
-#             ) if user_id else LikeAlias.blog_id == Blog.id
-#         )
-#         .filter(Blog.is_deleted.is_(False))
-#         .order_by(func.coalesce(like_count_subquery.c.like_count, 0).desc())
-#         .limit(limit)
-#         .all()
-#     )
-
-#     return [
-#         {
-#             "id": b.id,
-#             "slug": b.slug,
-#             "title": b.title,
-#             "body": b.body,
-#             "created_at": b.created_at,
-#             "tag": b.tag,
-#             "featured_photo": b.featured_photo,
-#             "author_id": b.author_id,
-#             "author_fullname": b.author_fullname,
-#             "author_username": b.author_username,
-#             "like_count": b.like_count,
-#             "is_liked": b.is_liked,
-#         }
-#         for b in featured_blogs
-#     ]
+    return [
+        {
+            "id": b.id,
+            "slug": b.slug,
+            "title": b.title,
+            "body": b.body,
+            "created_at": b.created_at,
+            "tag": b.tag,
+            "featured_photo": b.featured_photo,
+            "author_id": b.author_id,
+            "author_fullname": b.author_fullname,
+            "author_username": b.author_username,
+            "likes_count": int(b.likes_count),
+            "is_liked": b.is_liked,
+        }
+        for b in featured_blogs
+    ]

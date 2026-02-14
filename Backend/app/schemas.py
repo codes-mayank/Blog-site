@@ -38,7 +38,7 @@ class BlogOutWithAuthor(BlogBase):
     author_fullname: str
     author_username: str
     is_liked: bool = False
-    # likes_count: int
+    likes_count: int = 0
 
 
 # Token Schemas

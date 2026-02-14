@@ -110,48 +110,62 @@ const BlogPost = () => {
              <div className="h-full bg-accent-primary w-full origin-left transform scale-x-0 animate-progress"></div>
         </div>
 
-      <article className="max-w-4xl mx-auto pt-32 px-6">
-        {/* Header Section */}
-        <header className="text-center mb-12 animate-fade-in-up">
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-               {post.tag && (
-                 <span className="bg-accent-primary/10 text-accent-primary px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider border border-accent-primary/20">
-                   {post.tag}
-                 </span>
-               )}
-               <span className="flex items-center text-text-secondary text-sm font-medium bg-white px-3 py-1.5 rounded-full border border-border-color shadow-sm">
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                 </svg>
-                 {calculateReadTime(post.body)}
-               </span>
-            </div>
+      <article className="max-w-5xl mx-auto pt-32 px-6">
+        {/* Featured Photo */}
+        {post.featured_photo && (
+          <div className="mb-8 rounded-3xl overflow-hidden shadow-lg border border-border-color animate-fade-in-up">
+            <img 
+              src={post.featured_photo} 
+              alt={post.title}
+              className="w-full h-auto max-h-96 object-cover"
+            />
+          </div>
+        )}
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary leading-[1.1] mb-8 tracking-tight">
+        {/* Header Section - Title */}
+        <header className="text-center mb-8 animate-fade-in-up">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary leading-[1.1] tracking-tight">
               {post.title}
             </h1>
-
-            <div className="flex items-center justify-center">
-              <div className="flex items-center bg-white p-2 pr-6 rounded-full shadow-sm border border-border-color transition-transform hover:scale-105 cursor-pointer group">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-secondary to-accent-primary text-white flex items-center justify-center text-xl font-bold shadow-md mr-4 group-hover:rotate-12 transition-transform">
-                    {post.author_fullname ? post.author_fullname.charAt(0) : 'A'}
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-text-primary text-lg leading-tight">
-                      {post.author_fullname || post.author_username}
-                    </div>
-                    <div className="text-xs text-text-secondary font-medium flex items-center gap-2">
-                      <span>@{post.author_username}</span>
-                      <span className="w-1 h-1 rounded-full bg-text-secondary/50"></span>
-                      <span>{new Date(post.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    </div>
-                  </div>
-              </div>
-            </div>
         </header>
 
+        {/* Meta Section - Profile, Read Time, Date, Tag in One Row */}
+        <div className="mb-12 flex flex-wrap items-center justify-center md:justify-start gap-4 animate-fade-in-up">
+          {/* Author Profile - No Border */}
+          <div className="flex items-center">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-secondary to-accent-primary text-white flex items-center justify-center text-sm font-bold shadow-md mr-3">
+              {post.author_fullname ? post.author_fullname.charAt(0) : 'A'}
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-text-primary text-sm leading-tight">
+                {post.author_fullname || post.author_username}
+              </div>
+            </div>
+          </div>
+
+          {/* Read Time - No Border */}
+          <span className="flex items-center text-text-secondary text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {calculateReadTime(post.body)}
+          </span>
+
+          {/* Date of Upload - No Border */}
+          <span className="text-text-secondary text-sm font-medium">
+            {new Date(post.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+          </span>
+
+          {/* Tag - With Rounded Box */}
+          {post.tag && (
+            <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
+              {post.tag}
+            </span>
+          )}
+        </div>
+
         {/* Content Section */}
-        <div className="bg-white rounded-3xl shadow-sm border border-border-color p-8 md:p-12 lg:p-16 mb-12">
+        <div className="bg-white -3xl  p-8 md:p-12 lg:p-16 mb-12">
             {/* <div className={`prose prose-lg max-w-none text-text-primary leading-loose whitespace-pre-wrap font-serif md:font-sans lg:text-xl text-opacity-90`}>
               {post.body}
             </div> */}
@@ -203,7 +217,7 @@ const BlogPost = () => {
         </div>
 
         {/* Footer / Author Bio */}
-        <div className="bg-gradient-to-br from-[#f8f9fa] to-[#eef2ff] rounded-2xl p-8 border border-border-color/50 mb-12 flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+        <div className="bg-gradient-to-br from-[#f8f9fa] to-[#eef2ff] -2xl p-8 mb-12 flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
             <div className="w-20 h-20 rounded-full bg-white p-1 shadow-md flex-shrink-0">
                 <div className="w-full h-full rounded-full bg-accent-secondary flex items-center justify-center text-white text-3xl font-bold">
                     {post.author_fullname ? post.author_fullname.charAt(0) : 'A'}
@@ -216,8 +230,8 @@ const BlogPost = () => {
                     Follow for more updates and stories regarding technology and life.
                 </p>
                 <div className="flex justify-center md:justify-start gap-3">
-                   <button className="px-4 py-2 bg-text-primary text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">Follow</button>
-                   <Link to="/" className="px-4 py-2 bg-white border border-border-color text-text-secondary text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">View all posts</Link>
+                   {/* <button className="px-4 py-2 bg-text-primary text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">Follow</button>
+                   <Link to="/" className="px-4 py-2 bg-white border border-border-color text-text-secondary text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">View all posts</Link> */}
                 </div>
             </div>
         </div>

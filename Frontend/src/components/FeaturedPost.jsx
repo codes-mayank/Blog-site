@@ -334,182 +334,182 @@
 
 
 
-// import React, { useState, useEffect } from "react";
-// import DefaultImg from "../assets/Default.jpg";
+import React, { useState, useEffect } from "react";
+import DefaultImg from "../assets/Default.jpg";
 
-// const FeaturedPost = () => {
-//   const [currentIndex, setCurrentIndex] = useState(0);
-//   const [isTransitioning, setIsTransitioning] = useState(true);
+const FeaturedPost = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
 
-//   const featuredPosts = [
-//     {
-//       id: 1,
-//       image: DefaultImg,
-//       title: "The Evolution of Modern Frontend Architecture",
-//       excerpt:
-//         "The evolution of modern frontend architecture and the most sustainable modern approaches and implementing patterns.",
-//       author: "Arthur Denatia",
-//       authorImage:
-//         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-//       timeAgo: "7 hours ago",
-//     },
-//     {
-//       id: 2,
-//       image: DefaultImg,
-//       title: "Building Scalable Web Applications with React",
-//       excerpt:
-//         "Learn how to build scalable and maintainable web applications using React and modern tooling.",
-//       author: "Sarah Johnson",
-//       authorImage:
-//         "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-//       timeAgo: "12 hours ago",
-//     },
-//     {
-//       id: 3,
-//       image: DefaultImg,
-//       title: "The Future of Web Development in 2025",
-//       excerpt:
-//         "Exploring emerging trends and technologies that will shape the future of web development.",
-//       author: "Mike Chen",
-//       authorImage:
-//         "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-//       timeAgo: "1 day ago",
-//     },
-//   ];
+  const featuredPosts = [
+    {
+      id: 1,
+      image: DefaultImg,
+      title: "The Evolution of Modern Frontend Architecture",
+      excerpt:
+        "The evolution of modern frontend architecture and the most sustainable modern approaches and implementing patterns.",
+      author: "Arthur Denatia",
+      authorImage:
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+      timeAgo: "7 hours ago",
+    },
+    {
+      id: 2,
+      image: DefaultImg,
+      title: "Building Scalable Web Applications with React",
+      excerpt:
+        "Learn how to build scalable and maintainable web applications using React and modern tooling.",
+      author: "Sarah Johnson",
+      authorImage:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+      timeAgo: "12 hours ago",
+    },
+    {
+      id: 3,
+      image: DefaultImg,
+      title: "The Future of Web Development in 2025",
+      excerpt:
+        "Exploring emerging trends and technologies that will shape the future of web development.",
+      author: "Mike Chen",
+      authorImage:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+      timeAgo: "1 day ago",
+    },
+  ];
 
-//   // Auto Slide
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setCurrentIndex((prev) => prev + 1);
-//     }, 5000);
+  // Auto Slide
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => prev + 1);
+    }, 5000);
 
-//     return () => clearInterval(timer);
-//   }, []);
+    return () => clearInterval(timer);
+  }, []);
 
-//   // Infinite loop handling
-//   useEffect(() => {
-//     if (currentIndex === featuredPosts.length) {
-//       setTimeout(() => {
-//         setIsTransitioning(false);
-//         setCurrentIndex(0);
-//       }, 700); // must match duration
-//     } else {
-//       setIsTransitioning(true);
-//     }
-//   }, [currentIndex, featuredPosts.length]);
+  // Infinite loop handling
+  useEffect(() => {
+    if (currentIndex === featuredPosts.length) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentIndex(0);
+      }, 700); // must match duration
+    } else {
+      setIsTransitioning(true);
+    }
+  }, [currentIndex, featuredPosts.length]);
 
-//   const goToNext = () => {
-//     setCurrentIndex((prev) => prev + 1);
-//   };
+  const goToNext = () => {
+    setCurrentIndex((prev) => prev + 1);
+  };
 
-//   const goToPrevious = () => {
-//     if (currentIndex === 0) {
-//       setIsTransitioning(false);
-//       setCurrentIndex(featuredPosts.length - 1);
-//     } else {
-//       setCurrentIndex((prev) => prev - 1);
-//     }
-//   };
+  const goToPrevious = () => {
+    if (currentIndex === 0) {
+      setIsTransitioning(false);
+      setCurrentIndex(featuredPosts.length - 1);
+    } else {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
 
-//   const goToSlide = (index) => {
-//     setCurrentIndex(index);
-//   };
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
 
-//   return (
-//     <div className="relative mb-8 overflow-hidden">
+  return (
+    <div className="relative mb-8 overflow-hidden">
 
-//       {/* Slides Wrapper */}
-//       <div
-//         className={`flex ${
-//           isTransitioning ? "transition-transform duration-700 ease-in-out" : ""
-//         }`}
-//         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-//       >
-//         {[...featuredPosts, featuredPosts[0]].map((post, index) => (
-//           <div key={index} className="min-w-full">
-//             <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px]">
+      {/* Slides Wrapper */}
+      <div
+        className={`flex ${
+          isTransitioning ? "transition-transform duration-700 ease-in-out" : ""
+        }`}
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {[...featuredPosts, featuredPosts[0]].map((post, index) => (
+          <div key={index} className="min-w-full">
+            <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px]">
 
-//               {/* Image */}
-//               <div className="relative min-h-[200px] md:min-h-auto">
-//                 <img
-//                   src={post.image}
-//                   alt={post.title}
-//                   className="w-full h-full object-cover absolute inset-0"
-//                 />
-//               </div>
+              {/* Image */}
+              <div className="relative min-h-[200px] md:min-h-auto">
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  className="w-full h-full object-cover absolute inset-0"
+                />
+              </div>
 
-//               {/* Content */}
-//               <div className="p-8 flex flex-col justify-center">
-//                 <span className="text-accent-primary font-semibold text-sm mb-2 inline-block">
-//                   Featured
-//                 </span>
+              {/* Content */}
+              <div className="p-8 flex flex-col justify-center">
+                <span className="text-accent-primary font-semibold text-sm mb-2 inline-block">
+                  Featured
+                </span>
 
-//                 <h2 className="text-3xl font-semibold leading-tight mb-4 text-text-primary tracking-tight">
-//                   {post.title}
-//                 </h2>
+                <h2 className="text-3xl font-semibold leading-tight mb-4 text-text-primary tracking-tight">
+                  {post.title}
+                </h2>
 
-//                 <p className="text-text-secondary leading-relaxed mb-6 text-lg">
-//                   {post.excerpt}
-//                 </p>
+                <p className="text-text-secondary leading-relaxed mb-6 text-lg">
+                  {post.excerpt}
+                </p>
 
-//                 <div className="flex items-center gap-4">
-//                   <img
-//                     src={post.authorImage}
-//                     alt={post.author}
-//                     className="w-12 h-12 rounded-full object-cover"
-//                   />
-//                   <div className="flex flex-col">
-//                     <span className="font-semibold text-text-primary text-base">
-//                       {post.author}
-//                     </span>
-//                     <span className="text-sm text-text-secondary">
-//                       Published {post.timeAgo}
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={post.authorImage}
+                    alt={post.author}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-text-primary text-base">
+                      {post.author}
+                    </span>
+                    <span className="text-sm text-text-secondary">
+                      Published {post.timeAgo}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-//             </div>
-//           </div>
-//         ))}
-//       </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-//       {/* Previous Button */}
-//       <button
-//         onClick={goToPrevious}
-//         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
-//       >
-//         ‹
-//       </button>
+      {/* Previous Button */}
+      <button
+        onClick={goToPrevious}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
+      >
+        ‹
+      </button>
 
-//       {/* Next Button */}
-//       <button
-//         onClick={goToNext}
-//         className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
-//       >
-//         ›
-//       </button>
+      {/* Next Button */}
+      <button
+        onClick={goToNext}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
+      >
+        ›
+      </button>
 
-//       {/* Dots */}
-//       <div className="flex justify-center gap-2 mt-6">
-//         {featuredPosts.map((_, index) => (
-//           <button
-//             key={index}
-//             onClick={() => goToSlide(index)}
-//             className={`h-3 rounded-full transition-all duration-300 ${
-//               currentIndex % featuredPosts.length === index
-//                 ? "bg-accent-primary w-8"
-//                 : "bg-gray-300 w-3"
-//             }`}
-//           />
-//         ))}
-//       </div>
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-6">
+        {featuredPosts.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`h-3 rounded-full transition-all duration-300 ${
+              currentIndex % featuredPosts.length === index
+                ? "bg-accent-primary w-8"
+                : "bg-gray-300 w-3"
+            }`}
+          />
+        ))}
+      </div>
 
-//     </div>
-//   );
-// };
+    </div>
+  );
+};
 
-// export default FeaturedPost;
+export default FeaturedPost;
 
 
 // import React, { useState, useEffect } from "react";
