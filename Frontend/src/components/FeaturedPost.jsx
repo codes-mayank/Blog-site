@@ -340,54 +340,109 @@ import DefaultImg from "../assets/Default.jpg";
 const FeaturedPost = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const featuredPosts = [
-    {
-      id: 1,
-      image: DefaultImg,
-      title: "The Evolution of Modern Frontend Architecture",
-      excerpt:
-        "The evolution of modern frontend architecture and the most sustainable modern approaches and implementing patterns.",
-      author: "Arthur Denatia",
-      authorImage:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-      timeAgo: "7 hours ago",
-    },
-    {
-      id: 2,
-      image: DefaultImg,
-      title: "Building Scalable Web Applications with React",
-      excerpt:
-        "Learn how to build scalable and maintainable web applications using React and modern tooling.",
-      author: "Sarah Johnson",
-      authorImage:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-      timeAgo: "12 hours ago",
-    },
-    {
-      id: 3,
-      image: DefaultImg,
-      title: "The Future of Web Development in 2025",
-      excerpt:
-        "Exploring emerging trends and technologies that will shape the future of web development.",
-      author: "Mike Chen",
-      authorImage:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-      timeAgo: "1 day ago",
-    },
-  ];
+  // Fetch featured posts from API
+  useEffect(() => {
+    const fetchFeaturedPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:8000/featured", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Transform API response to match component structure
+        const transformedPosts = data.map((post) => ({
+          id: post.id,
+          slug: post.slug,
+          image: post.featured_photo || DefaultImg,
+          title: post.title,
+          excerpt: extractExcerpt(post.body, 30),
+          author: post.author_fullname,
+          authorImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            post.author_fullname
+          )}&background=random`,
+          timeAgo: formatTimeAgo(post.created_at),
+          likes_count: post.likes_count,
+          is_liked: post.is_liked,
+        }));
+
+        setFeaturedPosts(transformedPosts);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching featured posts:", err);
+        setError("Failed to load featured posts");
+        setFeaturedPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedPosts();
+  }, []);
+
+  // Format time ago helper function
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    const intervals = {
+      year: 31536000,
+      month: 2592000,
+      week: 604800,
+      day: 86400,
+      hour: 3600,
+      minute: 60,
+    };
+
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+      const interval = Math.floor(seconds / secondsInUnit);
+      if (interval >= 1) {
+        return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
+      }
+    }
+
+    return "just now";
+  };
+
+  // Extract plain text from HTML and limit to word count
+  const extractExcerpt = (htmlContent, wordLimit = 30) => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+    const words = plainText.trim().split(/\s+/);
+    const excerpt = words.slice(0, wordLimit).join(" ");
+    return excerpt + (words.length > wordLimit ? "..." : "");
+  };
 
   // Auto Slide
   useEffect(() => {
+    if (featuredPosts.length === 0) return;
+
     const timer = setInterval(() => {
       setCurrentIndex((prev) => prev + 1);
     }, 5000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [featuredPosts.length]);
 
   // Infinite loop handling
   useEffect(() => {
+    if (featuredPosts.length === 0) return;
+
     if (currentIndex === featuredPosts.length) {
       setTimeout(() => {
         setIsTransitioning(false);
@@ -415,9 +470,51 @@ const FeaturedPost = () => {
     setCurrentIndex(index);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="relative mb-8 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px] animate-pulse">
+          <div className="bg-gray-300"></div>
+          <div className="p-8 flex flex-col justify-center gap-4">
+            <div className="h-4 bg-gray-300 rounded w-20"></div>
+            <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-300 rounded w-full"></div>
+            <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="relative mb-8 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px]">
+          <div className="col-span-full p-8 flex items-center justify-center">
+            <p className="text-text-secondary text-lg">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No posts state
+  if (featuredPosts.length === 0) {
+    return (
+      <div className="relative mb-8 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px]">
+          <div className="col-span-full p-8 flex items-center justify-center">
+            <p className="text-text-secondary text-lg">No featured posts available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative mb-8 overflow-hidden">
-
       {/* Slides Wrapper */}
       <div
         className={`flex ${
@@ -428,7 +525,6 @@ const FeaturedPost = () => {
         {[...featuredPosts, featuredPosts[0]].map((post, index) => (
           <div key={index} className="min-w-full">
             <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] bg-bg-secondary rounded-2xl overflow-hidden shadow-lg min-h-[360px]">
-
               {/* Image */}
               <div className="relative min-h-[200px] md:min-h-auto">
                 <img
@@ -436,6 +532,24 @@ const FeaturedPost = () => {
                   alt={post.title}
                   className="w-full h-full object-cover absolute inset-0"
                 />
+                {/* Like count badge */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg flex items-center gap-2">
+                  <svg
+                    className={`w-5 h-5 ${
+                      post.is_liked
+                        ? "fill-red-500 text-red-500"
+                        : "fill-none text-gray-600"
+                    }`}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <span className="font-semibold text-gray-700">
+                    {post.likes_count}
+                  </span>
+                </div>
               </div>
 
               {/* Content */}
@@ -448,7 +562,7 @@ const FeaturedPost = () => {
                   {post.title}
                 </h2>
 
-                <p className="text-text-secondary leading-relaxed mb-6 text-lg">
+                <p className="text-text-secondary leading-relaxed mb-6 text-lg line-clamp-3">
                   {post.excerpt}
                 </p>
 
@@ -468,43 +582,50 @@ const FeaturedPost = () => {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         ))}
       </div>
 
       {/* Previous Button */}
-      <button
-        onClick={goToPrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
-      >
-        ‹
-      </button>
+      {featuredPosts.length > 1 && (
+        <button
+          onClick={goToPrevious}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10 transition-colors"
+          aria-label="Previous slide"
+        >
+          ‹
+        </button>
+      )}
 
       {/* Next Button */}
-      <button
-        onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
-      >
-        ›
-      </button>
+      {featuredPosts.length > 1 && (
+        <button
+          onClick={goToNext}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10 transition-colors"
+          aria-label="Next slide"
+        >
+          ›
+        </button>
+      )}
 
       {/* Dots */}
-      <div className="flex justify-center gap-2 mt-6">
-        {featuredPosts.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`h-3 rounded-full transition-all duration-300 ${
-              currentIndex % featuredPosts.length === index
-                ? "bg-accent-primary w-8"
-                : "bg-gray-300 w-3"
-            }`}
-          />
-        ))}
-      </div>
-
+      {featuredPosts.length > 1 && (
+        <div className="flex justify-center gap-2 mt-6">
+          {featuredPosts.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`h-3 rounded-full transition-all duration-300 ${
+                currentIndex % featuredPosts.length === index
+                  ? "bg-accent-primary w-8"
+                  : "bg-gray-300 w-3"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

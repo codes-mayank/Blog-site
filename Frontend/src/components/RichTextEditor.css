@@ -2,4 +2,40 @@
     font-size: 20px;
 }
 
+.ql-toolbar {
+    padding: 15px;
+}
 
+.ql-toolbar.ql-snow .ql-formats button,
+.ql-toolbar.ql-snow .ql-formats button:hover,
+.ql-toolbar.ql-snow .ql-formats button.ql-active,
+.ql-toolbar.ql-snow .ql-formats select,
+.ql-toolbar.ql-snow .ql-formats select:hover,
+.ql-toolbar.ql-snow .ql-formats select.ql-active {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+}
+
+.ql-toolbar.ql-snow .ql-formats select {
+    width: 80px;
+    height: 35px;
+    font-size: 16px;
+    padding: 5px 8px;
+}
+
+.ql-toolbar.ql-snow .ql-stroke {
+    stroke-width: 2;
+}
+
+.ql-toolbar.ql-snow .ql-fill {
+    fill: currentColor;
+}
+
+.ql-toolbar.ql-snow button:hover .ql-fill,
+.ql-toolbar.ql-snow button:hover .ql-stroke,
+.ql-toolbar.ql-snow button.ql-active .ql-fill,
+.ql-toolbar.ql-snow button.ql-active .ql-stroke {
+    fill: #1F2937;
+    stroke: #1F2937;
+}

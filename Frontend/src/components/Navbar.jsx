@@ -16,7 +16,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[1600px] z-50">
       <div className="bg-bg-secondary/80 backdrop-blur-md border border-white/20 shadow-lg rounded-2xl px-6 py-3 flex items-center justify-between gap-6 hover:shadow-xl transition-all duration-300">
-        <Link to="/" className="text-2xl font-extrabold text-text-primary tracking-tighter flex items-baseline no-underline shrink-0">
+        <Link to="/" onClick={() => setSearchQuery('')} className="text-2xl font-extrabold text-text-primary tracking-tighter flex items-baseline no-underline shrink-0">
           DevBlog<span className="text-accent-primary text-4xl leading-none ml-[2px]">.</span>
         </Link>
 
@@ -50,14 +50,14 @@ const Navbar = () => {
               <div className="h-6 w-px bg-border-color hidden md:block"></div>
 
               <div className="flex items-center gap-3">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full text-text-secondary bg-transparent transition-all hover:bg-bg-primary hover:text-text-primary cursor-pointer active:scale-95">
+                <button onClick={logout} className="flex items-center justify-center w-10 h-10 rounded-full text-text-secondary bg-transparent transition-all hover:bg-bg-primary hover:text-red-500 cursor-pointer active:scale-95" title="Logout">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15m-3 0l3-3m0 0l-3-3m3 3H2.25" />
                   </svg>
                 </button>
 
-                <button onClick={logout} className="w-10 h-10 rounded-full overflow-hidden border-2 border-white ring-2 ring-transparent transition-all hover:ring-accent-primary/20 cursor-pointer shadow-sm">
-                   <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="User" className="w-full h-full object-cover" />
+                <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-white ring-2 ring-transparent transition-all hover:ring-accent-primary/20 cursor-pointer shadow-sm">
+                   <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.username || user.email)}&background=random&color=fff`} alt="User" className="w-full h-full object-cover" />
                 </button>
               </div>
             </>

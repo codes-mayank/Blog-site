@@ -5,35 +5,17 @@ from sqlalchemy.orm import Session, aliased
 from app.models import Blog, User, Like
 from app.database import get_db
 from app.schemas import BlogBase, BlogCreate, BlogOut, BlogOutWithAuthor, BlogUpdate, Token
-from app.core.security import get_current_user, verify_token
+from app.core.security import get_current_user, get_current_user_optional, verify_token
 from app.utils.blog import create_slug
 from sqlalchemy import case, and_, literal, func
 from app.core.config import settings
+from sqlalchemy import func, case
+from sqlalchemy.orm import Session
+from typing import Optional, List
+from fastapi import APIRouter, Depends
 
 
 router = APIRouter()
-
-
-
-
-def get_current_user_optional(request: Request) -> Optional[Token]:
-    """
-    Get current user if logged in, otherwise return None.
-    This doesn't raise an error if user is not authenticated.
-    """
-    token = request.cookies.get(settings.ACCESS_TOKEN_COOKIE_NAME)
-    
-    if not token:
-        return None
-    
-    # try:
-    #     token_data = verify_token(token)
-    #     return token_data
-    # except:
-    #     return None
-    print("\n\n\nToken from cookie:", token)  # Debugging line
-    return verify_token(token)
-
 
 
 
@@ -359,7 +341,7 @@ def update_blog(blog: BlogUpdate, id: int, db: Session = Depends(get_db), token:
     if blog_db.author_id != token.user_id:
         raise HTTPException(status_code=403, detail="You are not authorized to update this blog post")
     
-    update_stmt = update(Blog).where(Blog.id == id).values(title=blog.title, body=blog.body, tag=blog.tag)
+    update_stmt = update(Blog).where(Blog.id == id).values(title=blog.title, body=blog.body, tag=blog.tag, featured_photo=blog.featured_photo)
     db.execute(update_stmt)
     db.commit()
     db.refresh(blog_db)
@@ -368,66 +350,84 @@ def update_blog(blog: BlogUpdate, id: int, db: Session = Depends(get_db), token:
 
 
 
-@router.get('/featured', response_model=List[BlogOutWithAuthor])
-def get_featured_blogs(
-    limit: int = 3,  # Get top 3 most liked
-    db: Session = Depends(get_db),
-    current_user: Optional[Token] = Depends(get_current_user_optional)
-):
-    """Get the most liked blog posts (featured posts)"""
-    # Always return is_liked as False for featured list (not user-specific)
-    is_liked_expr = literal(False).label("is_liked")
 
-    # Subquery to count active likes per blog
-    like_count_subquery = (
-        db.query(
-            Like.blog_id,
-            func.count(Like.id).label('likes_count')
-        )
-        .filter(Like.is_active == True)
-        .group_by(Like.blog_id)
-        .subquery()
-    )
 
-    # Main query
-    featured_blogs = (
-        db.query(
-            Blog.id,
-            Blog.slug,
-            Blog.title,
-            Blog.tag,
-            Blog.body,
-            Blog.created_at,
-            Blog.featured_photo,
-            Blog.author_id,
-            User.full_name.label("author_fullname"),
-            User.username.label("author_username"),
-            func.coalesce(like_count_subquery.c.likes_count, 0).label("likes_count"),
-            is_liked_expr
-        )
-        .join(User, Blog.author_id == User.id)
-        .outerjoin(like_count_subquery, Blog.id == like_count_subquery.c.blog_id)
+
+
+# @router.get('/most-liked', response_model=List[BlogOutWithAuthor])
+# def get_most_liked_posts(
+#     limit: int = 3,
+#     db: Session = Depends(get_db),
+#     current_user: Optional[Token] = Depends(get_current_user_optional)
+# ):
+#     """Get the most liked blog posts"""
+    
+#     # Subquery to count active likes for each blog
+#     likes_subquery = (
+#         db.query(
+#             Like.blog_id,
+#             func.count(Like.id).label('likes_count')
+#         )
+#         .filter(Like.is_active == True)
+#         .group_by(Like.blog_id)
+#         .subquery()
+#     )
+    
+#     # Main query with author details and likes count
+#     query = (
+#         db.query(
+#             Blog.id,
+#             Blog.slug,
+#             Blog.title,
+#             Blog.tag,
+#             Blog.body,
+#             Blog.created_at,
+#             Blog.featured_photo,
+#             Blog.author_id,
+#             User.full_name.label("author_fullname"),
+#             User.username.label("author_username"),
+#             func.coalesce(likes_subquery.c.likes_count, 0).label("likes_count")
+#         )
+#         .join(User, Blog.author_id == User.id)
+#         .outerjoin(likes_subquery, Blog.id == likes_subquery.c.blog_id)
+#         .filter(Blog.is_deleted == False)
+#         .order_by(func.coalesce(likes_subquery.c.likes_count, 0).desc(), Blog.created_at.desc())
+#         .limit(limit)
+#         .all()
+#     )
+    
+#     # If user is logged in, check which posts they've liked
+#     if current_user:
+#         blog_ids = [b.id for b in query]
+#         user_id = current_user.user_id
         
-        .filter(Blog.is_deleted.is_(False))
-        .order_by(func.coalesce(like_count_subquery.c.likes_count, 0).desc())
-        .limit(limit)
-        .all()
-    )
-
-    return [
-        {
-            "id": b.id,
-            "slug": b.slug,
-            "title": b.title,
-            "body": b.body,
-            "created_at": b.created_at,
-            "tag": b.tag,
-            "featured_photo": b.featured_photo,
-            "author_id": b.author_id,
-            "author_fullname": b.author_fullname,
-            "author_username": b.author_username,
-            "likes_count": int(b.likes_count),
-            "is_liked": b.is_liked,
-        }
-        for b in featured_blogs
-    ]
+#         liked_blog_ids = set(
+#             row[0] for row in db.query(Like.blog_id)
+#             .filter(
+#                 Like.blog_id.in_(blog_ids),
+#                 Like.user_id == user_id,
+#                 Like.is_active == True
+#             )
+#             .all()
+#         )
+#     else:
+#         liked_blog_ids = set()
+    
+#     # Format the response
+#     return [
+#         {
+#             "id": b.id,
+#             "slug": b.slug,
+#             "title": b.title,
+#             "body": b.body,
+#             "created_at": b.created_at,
+#             "tag": b.tag,
+#             "featured_photo": b.featured_photo,
+#             "author_id": b.author_id,
+#             "author_fullname": b.author_fullname,
+#             "author_username": b.author_username,
+#             "is_liked": b.id in liked_blog_ids,
+#             "likes_count": b.likes_count,
+#         }
+#         for b in query
+#     ]

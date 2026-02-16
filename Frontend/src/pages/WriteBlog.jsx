@@ -3,6 +3,16 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import RichTextEditor from '../components/RichTextEditor';
 
+const categories = [
+  'Engineering',
+  'Productivity',
+  'Modern',
+  'Dreaming',
+  'Guide',
+  'Design',
+  'Other'
+];
+
 const WriteBlog = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -215,19 +225,23 @@ const WriteBlog = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="tag" className="block text-sm font-medium text-text-secondary mb-2">Tag (Category)</label>
-              <input
-                type="text"
-                id="tag"
-                name="tag"
-                required
-                value={formData.tag}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-bg-primary border border-transparent focus:bg-white focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/10 outline-none transition-all text-text-primary placeholder:text-text-secondary/50"
-                placeholder="e.g. Engineering"
-              />
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-3">Tag (Category)</label>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tag: category })}
+                  className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 whitespace-nowrap ${
+                    formData.tag === category
+                      ? 'bg-accent-primary text-white shadow-md'
+                      : 'bg-bg-primary border border-border-color text-text-primary hover:border-accent-primary hover:bg-white'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
           </div>
 

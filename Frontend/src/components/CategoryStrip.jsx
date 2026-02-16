@@ -14,12 +14,12 @@ const categories = [
 const CategoryStrip = ({ activeCategory, onCategoryChange }) => {
 
   return (
-    <div className="w-full py-6 mt-6 px-6">
+    <div className="w-full py-2 mt-1 px-6">
       <div className="flex items-center gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden w-fit" style={{ scrollbarWidth: 'none' }}>
           {categories.map((category) => (
             <button
               key={category}
-              className={`cursor-pointer font-medium text-sm px-4 py-2 rounded-full transition-all duration-200 whitespace-nowrap ${
+              className={`cursor-pointer font-medium text-base px-5 py-3 rounded-full transition-all duration-200 whitespace-nowrap ${
                 activeCategory === category 
                   ? 'bg-blue-500 text-white shadow-md' 
                   : 'text-gray-700 hover:bg-gray-100'

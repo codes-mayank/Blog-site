@@ -41,26 +41,13 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
 
   const timeAgo = getTimeAgo(created_at);
 
-  // Generate excerpt from body (strip markdown/html if any effectively by taking text)
-  // Assuming body is plain text or simple markdown.
-  const getExcerpt = (text) => {
-      if (!text) return "No description available.";
-      // Simple strip of markdown chars like #, *, etc for cleaner view
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = text;
-      const cleanText = tempDiv.textContent || tempDiv.innerText || "";
-      return cleanText.length > 100 ? cleanText.substring(0, 100) + "..." : cleanText;
-  };
-
-  const excerpt = getExcerpt(body);
-
   // Use a placeholder image if none provided.
   // Using a consistent nature-themed image as visually similar to the prompt example
   const displayImage = featured_photo || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
 
   return (
     <div className="rounded-3xl shadow-lg overflow-hidden border border-gray-100 bg-white" >
-      <Link to={`/posts/${slug}`} className="block flex flex-row gap-6 p-6 hover:shadow-xl transition-shadow duration-300 group">
+      <Link to={`/posts/${slug}`} className="block flex flex-row gap-6 p-6 hover:  shadow-xl transition-shadow duration-300 group">
         {/* Image on Left */}
         <div className="w-48 h-40 rounded-2xl overflow-hidden shrink-0 shadow-md">
           <img src={displayImage} alt={title} className="w-full h-full object-cover" />
@@ -68,14 +55,14 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
 
         {/* Content on Right */}
         <div className="flex-1 flex flex-col justify-between">
-          {/* Title and Excerpt */}
+          {/* Title */}
           <div>
-            <h3 className="text-3xl font-serif font-bold text-slate-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+            <h3 className="text-xl font-serif font-bold text-slate-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
               {title}
             </h3>
-
-            {/* Excerpt */}
-            <p className="text-gray-600 text-base mb-4 line-clamp-3">{excerpt}</p>
+          </div>
+          <div className="ml-auto px-2.5 py-1 rounded-full bg-blue-500 text-white text-xs font-bold whitespace-nowrap shadow-md">
+                {tag}
           </div>
 
           {/* Footer: Author + Tag + Like */}
@@ -97,9 +84,7 @@ const PostCard = ({ slug, title, created_at, tag, author_fullname, author_userna
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <div className="px-2.5 py-1 rounded-full bg-blue-500 text-white text-xs font-bold whitespace-nowrap shadow-md">
-                {tag}
-              </div>
+              
 
               <button onClick={(e)=>{e.preventDefault(); e.stopPropagation(); onLike();}} className="flex items-center gap-0.5 text-red-500 group/like hover:scale-110 transition-transform shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isLiked? 'fill-current':'fill-none stroke-current'}`} viewBox="0 0 24 24">

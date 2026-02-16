@@ -52,3 +52,12 @@ def get_current_user(request: Request) -> Token:
 
     return verify_token(token)
 
+def get_current_user_optional(request: Request) -> Optional[Token]:
+    """
+    Get current user if logged in, otherwise return None.
+    This doesn't raise an error if user is not authenticated.
+    """
+    token = request.cookies.get(settings.ACCESS_TOKEN_COOKIE_NAME)
+    
+    if not token:
+        return None
